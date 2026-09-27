@@ -9,6 +9,9 @@ and this repository follows [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Contribution workflow rule: every change goes on a branch and through a
+  pull request, and any GitHub write needs approval first (AGENT.md,
+  CLAUDE.md).
 - Repository scaffolding: agreed directory layout, CI workflow placeholders,
   and project documentation (README, AGENT.md, CONTRIBUTING, SECURITY,
   LICENSE).

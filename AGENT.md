@@ -171,3 +171,48 @@ One line in it will become false, and it is the important one.
 - Do not soften the warning about executing model-authored shell commands
   while the scope, approval and timeout controls are still unwritten. It is
   the most accurate sentence in the repo.
+
+## Rule: ask before touching GitHub, and never push to main
+
+This overrides anything else in this file. Abhay approves every action that
+leaves this machine.
+
+### Ask first
+
+Stop and ask before running any of these, showing the exact command:
+
+- `git push` — any branch, any remote, including the first push of a new
+  branch
+- opening, editing, merging or closing a pull request
+- creating or deleting a remote branch, tag or release
+- any `gh` command that writes: issues, comments, labels, reviews, workflow
+  runs, repo or org settings
+- anything at all involving `--force`, `--force-with-lease`, or a remote
+  delete
+
+Do not batch these up and ask once at the end. Ask at the point of doing it,
+and wait for a clear yes.
+
+### No approval needed
+
+Local work is yours to get on with: `status`, `diff`, `log`, `show`, `add`,
+`commit`, creating and switching local branches, `stash`, reading anything.
+Commit freely — a local commit is not a GitHub action.
+
+### Every feature goes through a branch and a PR
+
+`main` is never pushed to directly. The loop for any change:
+
+1. Branch off current `main`: `feat/`, `fix/`, `docs/`, `chore/` or
+   `refactor/` plus a short kebab-case description — `feat/pairing-code-expiry`.
+2. Commit locally, as many commits as the work needs.
+3. **Ask**, then push the branch.
+4. **Ask**, then open the PR against `main`, filling in every prompt of the
+   pull request template.
+5. Report back: the branch, the PR link, what is in it, and anything left
+   incomplete.
+6. **Stop there.** Do not merge, do not squash, do not delete the branch, do
+   not mark anything ready or draft. Abhay says what happens next.
+
+A rejected or unanswered request is a stop, not a prompt to find another
+route to the same result.
