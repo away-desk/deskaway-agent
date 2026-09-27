@@ -168,9 +168,17 @@ One line in it will become false, and it is the important one.
   The day a version is tagged, that table changes in the same PR — an
   unsupported-looking project that is actually shipping teaches people to
   ignore the file.
-- The reporting route assumes GitHub private vulnerability reporting is
-  enabled on the repo. If that is ever turned off, this file needs a real
-  contact route the same day, or reports arrive as public issues.
+- The reporting route depends on whether the repo is public. GitHub private
+  vulnerability reporting is a public-repository feature and cannot be enabled
+  on a private one, so while these repos are private the route is an issue in
+  the affected repo. The day a repo goes public, work through the checklist in
+  SECURITY.md before flipping that switch, then rewrite the section to point at
+  the Security tab. Never advertise a reporting route that does not exist.
+- The "what protects these repositories today" section must stay accurate and
+  unflattering. It currently says there is no server-side net, because secret
+  scanning, push protection and branch protection are all unavailable for
+  private repos on this plan. If that changes — a plan upgrade, or a repo going
+  public — update it. An overstated security posture is its own risk.
 - Do not soften the warning about executing model-authored shell commands
   while the scope, approval and timeout controls are still unwritten. It is
   the most accurate sentence in the repo.

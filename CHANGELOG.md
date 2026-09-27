@@ -9,6 +9,10 @@ and this repository follows [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- SECURITY.md: reporting route corrected. Private vulnerability reporting is a
+  public-repository feature and was never enabled, so the file now routes
+  reports through a repo issue and carries a checklist to work through before
+  any repo goes public.
 - Pre-commit secret check in AGENT.md, plus CI steps enforcing that no
   credential-shaped file is tracked and that .gitignore blocks key material.
 - Pull request template prompt: which doc changed, or why none was needed.
