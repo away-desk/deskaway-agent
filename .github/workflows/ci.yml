@@ -63,6 +63,22 @@ jobs:
           grep -q '^## \[Unreleased\]' CHANGELOG.md \
             || { echo "::error file=CHANGELOG.md::no '## [Unreleased]' heading"; exit 1; }
 
+      - name: No credential-shaped files are tracked
+        run: |
+          hits=$(git ls-files | grep -Ei '\.(pem|key|p12|pfx|jks|keystore|snk|ppk|tfstate|tfvars)$|(^|/)\.env($|\.)' | grep -v '^\.env\.example$' || true)
+          if [ -n "$hits" ]; then
+            echo "::error::credential-shaped files are tracked: $hits"
+            exit 1
+          fi
+
+      - name: .gitignore blocks key material
+        run: |
+          status=0
+          for p in .env .env.local server.pem private.key client.p12; do
+            git check-ignore -q "$p" || { echo "::error file=.gitignore::$p is not ignored"; status=1; }
+          done
+          exit $status
+
       - name: Workflow YAML parses
         run: |
           for f in .github/workflows/*.yml; do

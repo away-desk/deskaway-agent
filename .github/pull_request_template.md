@@ -7,6 +7,13 @@
 <!-- Name the unit of work, milestone or issue. This is how you find, months
      from now, which PR did what. -->
 
+## Which doc changed, or why none was needed
+
+<!-- docs/architecture.md, a new docs/adr/NNNN-*.md, docs/local-setup.md,
+     docs/runbook.md — or a sentence saying why this change needed none.
+     A decision is not locked until it is written down; if this PR settled
+     something, the ADR belongs in it, not in a chat window. -->
+
 ## How I tested it
 
 <!-- Commands run, what you checked by hand, or "not tested" with a reason.

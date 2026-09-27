@@ -54,7 +54,10 @@ evals/
 docker/
   Dockerfile  .dockerignore
 docs/
-  runbook.md  adr/
+  architecture.md         # responsibility, boundaries, message flow, layering
+  local-setup.md          # running it from nothing, under ten minutes
+  runbook.md              # symptoms, checks, fixes, rollbacks
+  adr/                    # one file per decision, never edited after accepting
 pyproject.toml            # deps, lint and test config
 .python-version           # pinned interpreter
 ```
@@ -137,7 +140,7 @@ project is one person reviewing their own work, it is the self-check that
 catches what you were about to skip — so fill it in honestly rather than
 deleting the prompts.
 
-- Answer all four. "N/A" is a fine answer; a blank section is not.
+- Answer all five. "N/A" is a fine answer; a blank section is not.
 - **Which unit of the plan this belongs to** is the one that pays off later.
   In five months this is how you find which PR did what, so name the unit,
   not the file you touched.
@@ -145,7 +148,7 @@ deleting the prompts.
   acknowledged gap is a decision; an unmentioned one is a bug you will
   rediscover.
 - Change the template when a prompt stops earning its place, and keep it at
-  four or five. A template long enough to skim past is worse than none.
+  five or six. A template long enough to skim past is worse than none.
 
 ## Rule: keep CONTRIBUTING.md short
 
@@ -216,3 +219,179 @@ Commit freely — a local commit is not a GitHub action.
 
 A rejected or unanswered request is a stop, not a prompt to find another
 route to the same result.
+
+## Rule: how the docs in `docs/` are maintained
+
+Three rules govern everything in `docs/`. They matter more than the per-file
+guidance that follows.
+
+**1. A decision is not locked until it is written.** An unwritten decision lives in
+a chat window, and a chat window is gone. If a pull request settled something, the
+ADR belongs in that pull request.
+
+**2. The doc changes in the same pull request as the code.** Not in a follow-up, not
+in a cleanup pass. The pull request template asks which doc changed or why none was
+needed, and answering that one line honestly catches almost everything.
+
+**3. Docs are written for someone who was not there.** Not for you today — for a
+stranger, or for you in March having forgotten all of it. Any sentence that only
+makes sense because you remember the conversation needs rewriting. The test: could
+someone who has never spoken to you act on this? If not, it is a note to yourself,
+not documentation.
+
+### `docs/architecture.md`
+
+One per code repo. Five sections, in this order:
+
+1. **Responsibility** — what this component is accountable for, in three or four
+   lines.
+2. **What it deliberately does not do** — the boundaries, stated as prohibitions.
+   **This section is more useful than the first.** Writing the boundary down is what
+   stops you crossing it at 1am six weeks from now, when the shortcut looks
+   reasonable and nobody remembers why it was ruled out.
+3. **Internal pieces, and how a message flows** — the top-level parts, then one
+   concrete end-to-end trace. The trace is what makes the parts make sense.
+4. **Layering rules** — each with its reason. A rule without a reason gets
+   "temporarily" broken. The desktop's is the model: `Core` compiles with no
+   reference to `Transport` or `Execution`, because the logic deciding whether
+   something dangerous happens must be testable with no machine to damage.
+5. **What it talks to, and in which direction** — every peer, and which side dials.
+
+**When:** write the stub when the repo gets its first real code. Update it when a new
+top-level piece appears, a layering rule changes, or a peer is added or removed.
+**Not on every commit** — a new file inside an existing piece is not an architecture
+change.
+
+### `docs/adr/`
+
+One file per decision. The most valuable directory here and the easiest to write
+badly. Format, naming, and the never-edit rule are in
+[`docs/adr/README.md`](./adr/README.md); the template is `0000-template.md`.
+
+The short version: five sections — Status, Context, Decision, **Rejected options**,
+Consequences. Rejected options is the point; without it a record reads like a
+preference rather than engineering. Name them `NNNN-short-slug.md`, date them, and
+never edit an accepted one to change its decision — supersede it with a new one.
+
+**When: at the moment of deciding.** Not a week later. A week later you will
+remember what you chose and not what you rejected, and the rejected options were the
+whole point.
+
+### `docs/local-setup.md`
+
+Getting this repo running from nothing, targeting under ten minutes: exact versions
+to install, how to configure it, the command to run it, and **how to tell it is
+working** — a real command with real expected output, not "it should start".
+
+Include the recurring annoyances. Every repo has two or three, and they are the
+highest-value paragraphs in the file precisely because they are the ones nobody
+writes down.
+
+**When:** the first time you set the repo up on a machine, written as you go. Not
+afterwards from memory — by then you have forgotten the step that was not obvious,
+which is the only step worth documenting. Then again every time a setup step changes
+or starts taking longer than ten minutes.
+
+### `docs/runbook.md` — relay and agent only
+
+Different in kind from the others. They explain the system; this one is read by a
+panicking person at 3am, and that person is you in four months with no memory of how
+any of it works.
+
+So it is **not prose**. It is a list of symptoms — the relay will not start, all
+connections are dropping, approvals are not reaching phones, the database is
+refusing connections, memory keeps climbing — and each one carries four things: how
+to confirm it is really that, what to check first, how to fix it, and how to roll
+back if the fix fails.
+
+Two hard rules:
+
+- **Every command is copy-pasteable.** Nobody composes a shell pipeline at 3am. Put
+  the environment variables at the top so the commands below can be pasted as-is.
+- **Every entry is tested once.** Break the thing on purpose, follow your own entry,
+  and see whether it actually works. Untested entries carry `Verified: never`;
+  replace it with a date once you have run it. An untested runbook entry is a guess
+  with formatting.
+
+**When:** add an entry the first time a failure mode happens. Fix the entry that was
+wrong in the same pull request as the fix — that is the only thing that stops this
+file drifting into fiction.
+
+## Rule: check for keys before staging or committing
+
+Run this before `git add`, and again before `git commit`. A secret that reaches a
+commit is compromised even if the next commit removes it — it stays in the history,
+in every clone, and in any fork. Rotating it is then the only real fix, so the
+cheap moment to catch it is before it is staged.
+
+### The check
+
+Paste this at the repo root. It reports what *would* be committed, not what is on
+disk:
+
+```sh
+# 1. What is actually staged?
+git diff --cached --name-only
+
+# 2. Would any credential-shaped file be committed?
+git diff --cached --name-only | grep -Ei '\.(pem|key|pfx|p12|jks|keystore|snk|ppk|tfstate|tfvars)$|(^|/)\.env($|\.)|(^|/)(id_rsa|id_ed25519|credentials|secrets?\.(ya?ml|json))$'
+
+# 3. Does any staged content look like a secret?
+git diff --cached -U0 | grep -nEi '(api[_-]?key|secret|passwo?rd|token|bearer|private[_-]?key|access[_-]?key)[[:space:]]*[:=]|BEGIN [A-Z ]*PRIVATE KEY|sk-[A-Za-z0-9]{16,}|AKIA[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{20,}|eyJ[A-Za-z0-9_-]{20,}'
+
+# 4. Is anything credential-shaped already tracked from an earlier commit?
+git ls-files | grep -Ei '\.(pem|key|pfx|p12|jks|keystore|snk|ppk|tfstate|tfvars)$|(^|/)\.env($|\.)'
+```
+
+**Checks 2, 3 and 4 must print nothing.** If any of them prints, stop and deal with
+it before continuing — do not commit "just to save progress".
+
+### Reading the results
+
+- **A hit in check 2 or 4** — the file must not be tracked. Add the pattern to
+  `.gitignore`, then `git rm --cached <file>` to untrack it while keeping your local
+  copy.
+- **A hit in check 3** — read it before assuming the worst. A variable *name* in a
+  config schema, a documented placeholder, or `KEY_HERE` in an example is fine. An
+  actual value is not. If you cannot tell, treat it as real.
+- **A hit that is genuinely a false positive** — leave it and move on. Do not add a
+  suppression; the next person needs to see the same hit and make the same
+  judgement.
+
+### If a secret is already committed
+
+Assume it is public from the moment it existed in a commit.
+
+1. **Rotate the credential first.** Before touching git history, before telling
+   anyone. A rotated secret in history is a non-event; an unrotated one removed from
+   history is still a live secret sitting in someone's clone and in the reflog.
+2. Then remove it from the working tree and add the pattern to `.gitignore`.
+3. Only then consider rewriting history, and only if it never left this machine.
+   Once it is pushed, rewriting is not a fix — the rotation was the fix.
+4. Note it in the pull request. A quietly rotated key is a thing nobody can audit.
+
+### What each repo's `.gitignore` must already cover
+
+Keeping these in `.gitignore` is what makes the check above quiet enough to be
+worth running:
+
+- **Every repo** — `.env` and `.env.*` with an exception for `.env.example`, plus
+  `*.pem` and `*.key`.
+- **`deskaway-desktop`** — `*.pfx` and `*.snk`. Code-signing material; treat it as
+  more sensitive than a service credential, because it signs software that runs
+  commands on people's machines.
+- **`deskaway-android`** — `*.jks`, `*.keystore`, `keystore.properties`,
+  `signing.properties`. Same reasoning.
+- **`deskaway-infra`** — `*.tfstate*`, `*.tfvars`, `*.tfplan`, and `.terraform/`.
+  **State and plan files contain resolved secret values in plaintext**, which is why
+  they are ignored rather than merely discouraged. Never paste a raw plan into an
+  issue or a pull request comment either.
+
+If you add a new kind of credential to a repo, add its pattern to `.gitignore` in
+the same pull request that introduces it — not after the first near miss.
+
+### A note on `.env.example`
+
+It is tracked deliberately: it documents which variables exist. It holds **names and
+obviously-fake values only**. The moment a real value is pasted in for convenience,
+the file stops being a template and becomes a leak with an innocent-looking name.

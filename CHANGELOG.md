@@ -9,6 +9,14 @@ and this repository follows [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Pre-commit secret check in AGENT.md, plus CI steps enforcing that no
+  credential-shaped file is tracked and that .gitignore blocks key material.
+- Pull request template prompt: which doc changed, or why none was needed.
+- docs/runbook.md: symptom-based incident entries, each with how to confirm,
+  what to check, how to fix and how to roll back.
+- Component documentation: docs/architecture.md, docs/local-setup.md and
+  docs/adr/ with the ADR format and template. Upkeep rules for each in
+  AGENT.md.
 - CI workflow: repo hygiene checks that run today, plus stack-specific lint,
   build and test steps that activate once there is code to run them on.
 - Contribution workflow rule: every change goes on a branch and through a
