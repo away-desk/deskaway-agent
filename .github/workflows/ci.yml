@@ -1,0 +1,109 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  hygiene:
+    name: Repo hygiene
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Required files are present and non-empty
+        run: |
+          status=0
+          for f in README.md AGENT.md CLAUDE.md CONTRIBUTING.md SECURITY.md \
+                   CHANGELOG.md LICENSE .github/pull_request_template.md; do
+            if [ ! -f "$f" ]; then
+              echo "::error file=$f::missing"; status=1
+            elif [ ! -s "$f" ]; then
+              echo "::error file=$f::present but empty"; status=1
+            fi
+          done
+          exit $status
+
+      - name: LICENSE copyright is filled in
+        run: |
+          if grep -q 'name of copyright owner' LICENSE; then
+            echo "::error file=LICENSE::Apache-2.0 placeholder left in place"
+            exit 1
+          fi
+
+      - name: No empty workflow files
+        run: |
+          empty=$(find .github/workflows -type f -empty)
+          if [ -n "$empty" ]; then
+            echo "::error::empty workflow files: $empty"
+            exit 1
+          fi
+
+      - name: README answers the four questions, in order
+        run: |
+          expected=$'## Status\n## Running locally\n## The rest of DeskAway'
+          actual=$(grep -E '^## (Status|Running locally|The rest of DeskAway)$' README.md)
+          if [ "$actual" != "$expected" ]; then
+            echo "::error file=README.md::the four README sections are missing or out of order"
+            printf 'found:\n%s\n' "$actual"
+            exit 1
+          fi
+
+      - name: CHANGELOG has an Unreleased heading
+        run: |
+          grep -q '^## \[Unreleased\]' CHANGELOG.md \
+            || { echo "::error file=CHANGELOG.md::no '## [Unreleased]' heading"; exit 1; }
+
+      - name: Workflow YAML parses
+        run: |
+          for f in .github/workflows/*.yml; do
+            python3 -c "import sys,yaml; yaml.safe_load(open(sys.argv[1]))" "$f" \
+              || { echo "::error file=$f::invalid YAML"; exit 1; }
+          done
+
+  python:
+    name: Lint and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Is there a package to build yet?
+        id: state
+        run: |
+          if [ -s pyproject.toml ]; then
+            echo 'ready=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'ready=false' >> "$GITHUB_OUTPUT"
+            echo '::notice::pyproject.toml is empty, so there is nothing to lint or test. Delete this guard step once it has content.'
+          fi
+
+      - name: Install uv
+        if: steps.state.outputs.ready == 'true'
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Sync dependencies
+        if: steps.state.outputs.ready == 'true'
+        run: uv sync --all-extras --dev
+
+      - name: Format
+        if: steps.state.outputs.ready == 'true'
+        run: uv run ruff format --check .
+
+      - name: Lint
+        if: steps.state.outputs.ready == 'true'
+        run: uv run ruff check .
+
+      - name: Test
+        if: steps.state.outputs.ready == 'true'
+        run: uv run pytest -q
