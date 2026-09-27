@@ -107,3 +107,67 @@ How to apply it:
   labelled as planned or left out entirely.
 - Two lines means two lines. If section 1 needs a third paragraph, that
   content belongs in `deskaway-docs`.
+
+## Rule: keep CHANGELOG.md current
+
+Add a line the moment you do something notable — not at release time. The
+changelog is cheap to maintain one entry at a time and miserable to
+reconstruct from five months of git log.
+
+- Format is [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
+  versioning is [SemVer](https://semver.org/spec/v2.0.0.html).
+- Everything lands under `## [Unreleased]`, grouped by `### Added`,
+  `Changed`, `Deprecated`, `Removed`, `Fixed`, or `Security`. Create a group
+  when you first need it.
+- "Notable" means a reader of this repo would want to know: a new capability,
+  a behaviour change, a dependency that changes how you run it, a security
+  fix. Not: formatting, a typo, an internal rename nobody outside the file
+  can see.
+- Write for someone who has not read the diff. "Added pairing code
+  expiry" beats "updated code-generator.ts".
+- On a release, rename `[Unreleased]` to the version with the date, and open
+  a fresh empty `[Unreleased]` above it. Never delete history.
+- Entries are past tense and one line. If yours needs a paragraph, it is
+  probably two entries.
+
+## Rule: keep the pull request template useful
+
+`.github/pull_request_template.md` pre-fills every PR description. While this
+project is one person reviewing their own work, it is the self-check that
+catches what you were about to skip — so fill it in honestly rather than
+deleting the prompts.
+
+- Answer all four. "N/A" is a fine answer; a blank section is not.
+- **Which unit of the plan this belongs to** is the one that pays off later.
+  In five months this is how you find which PR did what, so name the unit,
+  not the file you touched.
+- **Anything deliberately left incomplete** is not an admission. An
+  acknowledged gap is a decision; an unmentioned one is a bug you will
+  rediscover.
+- Change the template when a prompt stops earning its place, and keep it at
+  four or five. A template long enough to skim past is worse than none.
+
+## Rule: keep CONTRIBUTING.md short
+
+It is currently five lines because there are no outside contributors. Resist
+growing it for people who do not exist yet.
+
+- Update it when the real answer changes: the formatter command, the branch
+  rule, or the day the project starts accepting outside contributions.
+- Anything longer than a few lines is either repo guidance — which belongs in
+  this file — or cross-repo process, which belongs in `deskaway-docs`.
+
+## Rule: keep SECURITY.md honest
+
+One line in it will become false, and it is the important one.
+
+- The supported-versions table says *nothing is supported, do not run this*.
+  The day a version is tagged, that table changes in the same PR — an
+  unsupported-looking project that is actually shipping teaches people to
+  ignore the file.
+- The reporting route assumes GitHub private vulnerability reporting is
+  enabled on the repo. If that is ever turned off, this file needs a real
+  contact route the same day, or reports arrive as public issues.
+- Do not soften the warning about executing model-authored shell commands
+  while the scope, approval and timeout controls are still unwritten. It is
+  the most accurate sentence in the repo.
