@@ -24,50 +24,24 @@ anything real until this section says otherwise.
 
 ## Reporting a vulnerability
 
-**Every repository in the [away-desk](https://github.com/away-desk) org is
-currently private.** If you can read this file, you have been granted access to the
-repository — so the audience for this section is a small number of people who
-already have a private channel to the maintainers.
+**Do not open a public issue, pull request or discussion for a security
+problem.** These repositories are public, so anything posted there is visible to
+everyone.
 
-**Report by opening an issue in the affected repository.** While the repo is
-private, that issue is visible only to people with access to it, which makes it an
-adequate private channel. Prefix the title with `[security]`.
-
-If you would rather not use an issue, contact the maintainer directly through
-whatever channel you already have with them. Do not post details anywhere public.
+**Report privately through GitHub:** go to this repository's
+[Security tab](https://github.com/away-desk/deskaway-agent/security) and choose
+**Report a vulnerability**, or open
+[a new private advisory](https://github.com/away-desk/deskaway-agent/security/advisories/new)
+directly. Only the maintainers can see it.
 
 Useful to include: what an attacker can do, steps to reproduce, which repository
 and component it affects, and whether you think it is already known elsewhere. A
 proof of concept helps.
 
 Expect a reply within a week. Since there is no released version, the likely
-outcome is a tracked issue and a fix in the normal course of development rather
-than a security release.
-
-### What this section will say once a repository is public
-
-GitHub's **private vulnerability reporting** — the "Report a vulnerability" button
-on the Security tab — is the right route for a public repository, because it lets a
-stranger reach the maintainers without disclosing the issue publicly first.
-
-It is **not available on a private repository**, on any plan. It is a
-public-repository feature. So it is deliberately not offered above: pointing people
-at a button that does not exist is worse than pointing them at an issue that does.
-
-**Before making any repository in this org public**, work through this list:
-
-- [ ] Enable private vulnerability reporting on it (Settings → Security → *Private
-      vulnerability reporting*). It is free for public repos.
-- [ ] Enable secret scanning and push protection. Also free for public repos, and
-      the only control that catches a committed credential at push time.
-- [ ] Rewrite the section above to point at the Security tab, and delete this
-      checklist from that repo's copy.
-- [ ] Re-run the key check in `AGENT.md` against the **full history**, not just the
-      current tip. Going public exposes every commit ever made, not just the latest
-      one — a credential removed in a later commit is still there to be found.
-- [ ] Confirm nothing in the history assumed the repo was private: internal
-      hostnames, account IDs, infrastructure detail, or a `.env.example` that
-      quietly acquired a real value.
+outcome is a tracked fix in the normal course of development rather than a
+security release. Once the fix is merged, the advisory is published with credit
+to the reporter unless they ask otherwise.
 
 ## Scope
 
@@ -85,13 +59,24 @@ does.
 
 Stated plainly, because an overstated security posture is its own risk:
 
+- **Secret scanning and push protection** are on. GitHub scans every push and
+  blocks one that contains a credential format it recognises. It does not
+  recognise everything — a custom token or a password in plain text gets
+  through.
+- **Branch protection on `main`**: changes arrive only through a pull request,
+  CI must pass before merging, and `main` cannot be force-pushed or deleted.
+  There is one maintainer, so no second person reviews a change before it
+  merges.
 - **`.gitignore` blocks key material** in every repo — `.env`, `*.pem`, `*.key`,
   `*.p12`, plus signing material in the client repos and Terraform state and plan
   files in `deskaway-infra`. Verified with `git check-ignore`, and enforced by two
   CI checks so it cannot quietly stop being true.
 - **A pre-commit key check** is documented in `AGENT.md` and expected before every
-  `git add`.
-- **Nothing more.** Secret scanning, push protection and branch protection are all
-  unavailable for private repositories on this org's plan. There is no server-side
-  net: if a credential is committed, nothing will stop the push. The checks above
-  are the whole defence, and they depend on someone actually running them.
+  `git add`. It is the only check that runs before a secret leaves the machine.
+- **The full history was checked before going public** (2026-09-29): no
+  credential-shaped file was ever tracked, and no commit added secret-shaped
+  content, account ids or internal hostnames.
+
+Everything in these repositories, including every past commit, is public.
+Anything committed by mistake must be treated as leaked and rotated, even if a
+later commit removes it.
