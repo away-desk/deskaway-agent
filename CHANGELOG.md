@@ -33,6 +33,14 @@ and this repository follows [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Repository scaffolding: agreed directory layout and project documentation
   (README, AGENT.md, CONTRIBUTING, SECURITY, LICENSE).
 
+### Changed
+
+- SECURITY.md rewritten for a public repository: vulnerabilities are reported
+  through GitHub private vulnerability reporting, and the protections section
+  now lists secret scanning, push protection and branch protection. The
+  go-public checklist is removed, having been completed. AGENT.md's SECURITY.md
+  rule updated to match.
+
 ### Removed
 
 - Empty placeholder workflow files, replaced by the CI workflow above. The
